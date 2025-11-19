@@ -144,14 +144,35 @@ log_info "Source: ${KERNEL_BUILD_DIR}"
 log_info "This may take 2-3 minutes..."
 echo ""
 
-cd "$(dirname ${KERNEL_BUILD_DIR})"
-tar czf "${SCRIPT_DIR}/tars/kernel-build.tar.gz" "$(basename ${KERNEL_BUILD_DIR})"
+# Check for and remove broken 'source' symlink before creating TAR
+if [ -L "${KERNEL_BUILD_DIR}/source" ]; then
+    log_info "Removing 'source' symlink (points to build host path)..."
+    rm "${KERNEL_BUILD_DIR}/source"
+fi
 
-if [ -f "${SCRIPT_DIR}/tars/kernel-build.tar.gz" ]; then
+# Change to parent directory and create tar
+PARENT_DIR=$(dirname "${KERNEL_BUILD_DIR}")
+DIR_NAME=$(basename "${KERNEL_BUILD_DIR}")
+
+cd "${PARENT_DIR}"
+
+# Create tar with progress indication
+tar czf "${SCRIPT_DIR}/tars/kernel-build.tar.gz" "${DIR_NAME}" 2>&1
+
+# Verify the tar was created successfully
+if [ ! -f "${SCRIPT_DIR}/tars/kernel-build.tar.gz" ]; then
+    log_error "✗ Failed to create kernel-build.tar.gz"
+    exit 1
+fi
+
+# Check if tar is valid
+if tar tzf "${SCRIPT_DIR}/tars/kernel-build.tar.gz" >/dev/null 2>&1; then
     BUILD_TAR_SIZE=$(du -h "${SCRIPT_DIR}/tars/kernel-build.tar.gz" | cut -f1)
     log_info "✓ kernel-build.tar.gz created: ${BUILD_TAR_SIZE}"
+    log_info "  (broken 'source' symlink removed)"
 else
-    log_error "✗ Failed to create kernel-build.tar.gz"
+    log_error "✗ kernel-build.tar.gz is corrupted!"
+    rm -f "${SCRIPT_DIR}/tars/kernel-build.tar.gz"
     exit 1
 fi
 
@@ -163,16 +184,23 @@ if [ -n "${KERNEL_SOURCE_DIR}" ] && [ -d "${KERNEL_SOURCE_DIR}" ]; then
     log_info "This may take 5-10 minutes (large files)..."
     echo ""
     
-    cd "$(dirname ${KERNEL_SOURCE_DIR})"
-    tar czf "${SCRIPT_DIR}/tars/kernel-source.tar.gz" "$(basename ${KERNEL_SOURCE_DIR})" 2>&1 | \
-        while read -r line; do echo -n "."; done
-    echo ""
+    PARENT_DIR=$(dirname "${KERNEL_SOURCE_DIR}")
+    DIR_NAME=$(basename "${KERNEL_SOURCE_DIR}")
     
-    if [ -f "${SCRIPT_DIR}/tars/kernel-source.tar.gz" ]; then
+    cd "${PARENT_DIR}"
+    
+    # Create tar with progress
+    tar czf "${SCRIPT_DIR}/tars/kernel-source.tar.gz" "${DIR_NAME}" 2>&1
+    
+    # Verify the tar was created successfully
+    if [ ! -f "${SCRIPT_DIR}/tars/kernel-source.tar.gz" ]; then
+        log_error "✗ Failed to create kernel-source.tar.gz"
+    elif tar tzf "${SCRIPT_DIR}/tars/kernel-source.tar.gz" >/dev/null 2>&1; then
         SOURCE_TAR_SIZE=$(du -h "${SCRIPT_DIR}/tars/kernel-source.tar.gz" | cut -f1)
         log_info "✓ kernel-source.tar.gz created: ${SOURCE_TAR_SIZE}"
     else
-        log_error "✗ Failed to create kernel-source.tar.gz"
+        log_error "✗ kernel-source.tar.gz is corrupted!"
+        rm -f "${SCRIPT_DIR}/tars/kernel-source.tar.gz"
     fi
 fi
 

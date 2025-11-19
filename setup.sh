@@ -179,16 +179,34 @@ setup_kernel_source() {
             log_info "Extracting kernel-build.tar.gz..."
             log_info "This will take 1-2 minutes..."
             
-            mkdir -p "${SCRIPT_DIR}"
-            tar xzf "${SCRIPT_DIR}/tars/kernel-build.tar.gz" -C "${SCRIPT_DIR}"
-            
-            # The TAR contains a 'build' directory, rename it to kernel-build
-            if [ -d "${SCRIPT_DIR}/build" ]; then
-                mv "${SCRIPT_DIR}/build" "${SCRIPT_DIR}/kernel-build"
+            # Verify TAR is valid before extracting
+            if ! tar tzf "${SCRIPT_DIR}/tars/kernel-build.tar.gz" >/dev/null 2>&1; then
+                log_error "kernel-build.tar.gz is corrupted or invalid!"
+                log_error "Please re-run copy-kernel-files.sh on build host"
+                exit 1
             fi
+            
+            # Extract to a temp location first
+            TEMP_DIR=$(mktemp -d)
+            tar xzf "${SCRIPT_DIR}/tars/kernel-build.tar.gz" -C "${TEMP_DIR}"
+            
+            # Find the extracted directory (could be 'build' or other name)
+            EXTRACTED_DIR=$(find "${TEMP_DIR}" -mindepth 1 -maxdepth 1 -type d | head -n 1)
+            
+            if [ -z "${EXTRACTED_DIR}" ]; then
+                log_error "No directory found in kernel-build.tar.gz"
+                rm -rf "${TEMP_DIR}"
+                exit 1
+            fi
+            
+            # Move to final location
+            mv "${EXTRACTED_DIR}" "${SCRIPT_DIR}/kernel-build"
+            rm -rf "${TEMP_DIR}"
             
             if [ -f "${SCRIPT_DIR}/kernel-build/Module.symvers" ]; then
                 log_info "✓ kernel-build extracted successfully"
+                MODULE_SIZE=$(du -h "${SCRIPT_DIR}/kernel-build/Module.symvers" | cut -f1)
+                log_info "  Module.symvers: ${MODULE_SIZE}"
             else
                 log_error "✗ Failed to extract kernel-build properly"
                 log_error "Module.symvers not found after extraction"
@@ -211,21 +229,30 @@ setup_kernel_source() {
             log_info "Extracting kernel-source.tar.gz..."
             log_info "This may take 3-5 minutes..."
             
-            mkdir -p "${SCRIPT_DIR}"
-            tar xzf "${SCRIPT_DIR}/tars/kernel-source.tar.gz" -C "${SCRIPT_DIR}"
-            
-            # The TAR may contain various directory names, find and rename
-            for dir in "${SCRIPT_DIR}"/kernel-source* "${SCRIPT_DIR}"/git; do
-                if [ -d "$dir" ] && [ "$dir" != "${SCRIPT_DIR}/kernel-source" ]; then
-                    mv "$dir" "${SCRIPT_DIR}/kernel-source"
-                    break
-                fi
-            done
-            
-            if [ -f "${SCRIPT_DIR}/kernel-source/Makefile" ]; then
-                log_info "✓ kernel-source extracted successfully"
+            # Verify TAR is valid
+            if ! tar tzf "${SCRIPT_DIR}/tars/kernel-source.tar.gz" >/dev/null 2>&1; then
+                log_warn "kernel-source.tar.gz is corrupted, skipping"
             else
-                log_warn "⚠ kernel-source extraction may be incomplete (but OK to continue)"
+                # Extract to temp location
+                TEMP_DIR=$(mktemp -d)
+                tar xzf "${SCRIPT_DIR}/tars/kernel-source.tar.gz" -C "${TEMP_DIR}"
+                
+                # Find the extracted directory
+                EXTRACTED_DIR=$(find "${TEMP_DIR}" -mindepth 1 -maxdepth 1 -type d | head -n 1)
+                
+                if [ -n "${EXTRACTED_DIR}" ]; then
+                    mv "${EXTRACTED_DIR}" "${SCRIPT_DIR}/kernel-source"
+                    rm -rf "${TEMP_DIR}"
+                    
+                    if [ -f "${SCRIPT_DIR}/kernel-source/Makefile" ]; then
+                        log_info "✓ kernel-source extracted successfully"
+                    else
+                        log_warn "⚠ kernel-source extraction may be incomplete"
+                    fi
+                else
+                    log_warn "⚠ No directory found in kernel-source.tar.gz"
+                    rm -rf "${TEMP_DIR}"
+                fi
             fi
         else
             log_info "No kernel-source TAR found (optional, continuing...)"
@@ -246,6 +273,18 @@ setup_kernel_source() {
         log_error "Makefile not found in kernel-build!"
         log_error "Expected: ${SCRIPT_DIR}/kernel-build/Makefile"
         exit 1
+    fi
+    
+    # Remove broken 'source' symlink if it exists
+    if [ -L "${SCRIPT_DIR}/kernel-build/source" ]; then
+        log_info "Removing broken 'source' symlink..."
+        rm "${SCRIPT_DIR}/kernel-build/source"
+    fi
+    
+    # Create proper 'source' symlink if kernel-source exists
+    if [ -d "${SCRIPT_DIR}/kernel-source" ] && [ -f "${SCRIPT_DIR}/kernel-source/Makefile" ]; then
+        log_info "Creating 'source' symlink to kernel-source..."
+        ln -s "${SCRIPT_DIR}/kernel-source" "${SCRIPT_DIR}/kernel-build/source"
     fi
     
     # Show file info
