@@ -1,0 +1,28 @@
+Kernel TAR Files Information
+============================
+
+Export Date:       Wed Nov 19 03:23:38 PM +08 2025
+Build Host:        edgemind
+Yocto Build Path:  /home/haris/BSPs/nxp/imxdesktop/build-desktop
+
+Kernel Build Source:
+  /home/haris/BSPs/nxp/imxdesktop/build-desktop/tmp/work/imx8mpevk-fsl-linux/linux-imx/6.1.y+gitAUTOINC+770c5fe2c1-r0/build
+
+Kernel Source:
+  /home/haris/BSPs/nxp/imxdesktop/build-desktop/tmp/work-shared/imx8mpevk/kernel-source
+
+TAR Files Created:
+  tars/kernel-build.tar.gz (475M)
+  tars/kernel-source.tar.gz (225M)
+
+Module.symvers Size:
+  1.1M
+
+Usage on Target Board:
+  The setup.sh script will automatically extract these TAR files
+  to kernel-build/ and kernel-source/ during installation.
+
+  Trainees just need to:
+    1. git clone <repository>
+    2. sudo ./setup.sh
+    3. sudo ./validate.sh
