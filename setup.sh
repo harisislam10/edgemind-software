@@ -284,7 +284,8 @@ setup_kernel_source() {
     # Create proper 'source' symlink if kernel-source exists
     if [ -d "${SCRIPT_DIR}/kernel-source" ] && [ -f "${SCRIPT_DIR}/kernel-source/Makefile" ]; then
         log_info "Creating 'source' symlink to kernel-source..."
-        ln -s "${SCRIPT_DIR}/kernel-source" "${SCRIPT_DIR}/kernel-build/source"
+        cd "${SCRIPT_DIR}/kernel-build"
+        ln -s "../kernel-source" "source"
     fi
     
     # Show file info
@@ -356,6 +357,41 @@ update_kernel_build_symlink() {
         exit 1
     fi
     
+    # Fix Makefile paths in target kernel source BEFORE creating symlink
+    if [ -f "${TARGET_KERNEL_SOURCE}/Makefile" ]; then
+        log_info "Fixing Makefile include paths..."
+        
+        # Check if kernel-source directory exists
+        KERNEL_SOURCE_DIR="/usr/src/kernel-source-${KERNEL_VERSION}"
+        
+        if [ -d "${KERNEL_SOURCE_DIR}" ]; then
+            # Replace hardcoded path with the actual kernel-source path
+            log_info "  Pointing to: ${KERNEL_SOURCE_DIR}"
+            sed -i "s|include .*/kernel-source/Makefile|include ${KERNEL_SOURCE_DIR}/Makefile|g" "${TARGET_KERNEL_SOURCE}/Makefile"
+            sed -i "s|include /home/.*/Makefile|include ${KERNEL_SOURCE_DIR}/Makefile|g" "${TARGET_KERNEL_SOURCE}/Makefile"
+            
+            # Fix srctree to point to kernel-source
+            sed -i "s|^srctree := .*|srctree := ${KERNEL_SOURCE_DIR}|g" "${TARGET_KERNEL_SOURCE}/Makefile"
+        elif [ -d "${TARGET_KERNEL_SOURCE}/source" ]; then
+            # If source subdirectory exists, use it
+            log_info "  Pointing to: ${TARGET_KERNEL_SOURCE}/source"
+            sed -i "s|include .*/kernel-source/Makefile|include \$(srctree)/Makefile|g" "${TARGET_KERNEL_SOURCE}/Makefile"
+            sed -i "s|include /home/.*/Makefile|include \$(srctree)/Makefile|g" "${TARGET_KERNEL_SOURCE}/Makefile"
+            sed -i "s|^srctree := .*|srctree := \$(CURDIR)/source|g" "${TARGET_KERNEL_SOURCE}/Makefile"
+        else
+            # Fallback: use current directory
+            log_info "  Pointing to: current directory"
+            sed -i "s|include .*/kernel-source/Makefile|include \$(srctree)/Makefile|g" "${TARGET_KERNEL_SOURCE}/Makefile"
+            sed -i "s|include /home/.*/Makefile|include \$(srctree)/Makefile|g" "${TARGET_KERNEL_SOURCE}/Makefile"
+            sed -i "s|^srctree := .*|srctree := .|g" "${TARGET_KERNEL_SOURCE}/Makefile"
+        fi
+        
+        # Also fix objtree
+        sed -i "s|^objtree := .*|objtree := .|g" "${TARGET_KERNEL_SOURCE}/Makefile"
+        
+        log_info "✓ Makefile paths fixed"
+    fi
+    
     # Remove old symlink/directory if exists
     if [ -L "${KERNEL_BUILD_SYMLINK}" ] || [ -d "${KERNEL_BUILD_SYMLINK}" ]; then
         log_info "Removing old build symlink/directory..."
@@ -375,6 +411,7 @@ update_kernel_build_symlink() {
         exit 1
     fi
 }
+
 
 ##############################################################################
 # Prepare Kernel Modules (CRITICAL STEP)
@@ -403,18 +440,14 @@ prepare_kernel_modules() {
     # Rebuild scripts for ARM64
     log_info "Rebuilding kernel scripts for ARM64..."
     log_info "This will take 2-3 minutes..."
-    if ! make scripts; then
+    
+
+    if ! make modules_prepare; then
         log_error "Failed to rebuild scripts!"
         log_error "Check if build tools are installed"
         exit 1
     fi
     
-    # Prepare kernel build environment
-    log_info "Preparing kernel build environment..."
-    if ! make prepare; then
-        log_error "Failed to prepare kernel!"
-        exit 1
-    fi
     
     # Verify fixdep is now ARM64
     log_info ""
@@ -611,6 +644,8 @@ print_banner() {
 ║    • Hailo PCIe driver                                            ║
 ║    • Docker services                                              ║
 ║                                                                   ║
+║                                                                   ║            
+║                   Prepared by: Haris                              ║                    
 ╚═══════════════════════════════════════════════════════════════════╝
 EOF
     echo -e "${NC}"
