@@ -131,7 +131,7 @@ http://localhost:8080
 1. **Take a screenshot** of the error message
 2. **Note down** which step failed (Docker installation, Hailo driver, etc.)
 3. **Copy the error text** if possible
-4. **Contact Haris** with:
+4. **Contact Us** with:
    - Screenshot of error
    - Step number where it failed
    - Any error messages shown
@@ -259,10 +259,10 @@ If you encounter any issues:
 1. **Take screenshots** of errors
 2. **Note the exact step** where it failed
 3. **Copy error messages**
-4. **Contact Haris** with all the above information
+4. **Contact Us** with all the above information
 
-**Email:** [your-email@example.com]  
-**Slack:** @haris  
+**Email:** [haris.islam@elliancesystem.com]  
+
 
 ---
 
@@ -288,8 +288,8 @@ sudo ./setup.sh
 - ✅ Always use `sudo` when running setup.sh
 - ✅ Make sure Git LFS is installed before cloning
 - ✅ Don't interrupt the setup script
-- ✅ Take screenshots if errors occur
-- ✅ Report any issues immediately to Haris
+- ✅ Take screenshots if errors occur and email us.
+
 
 ---
 
