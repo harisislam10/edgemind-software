@@ -156,7 +156,7 @@ install_custom_packages() {
     # Example:
     # apt install -y your-package-here
     
-    
+    apt install -y pciutils i2c-tools usbutils gpiod libgpiod2 libgpiod-dev
     
     # ===== END CUSTOM PACKAGES =====
     
