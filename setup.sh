@@ -22,6 +22,9 @@ KERNEL_VERSION=$(uname -r)
 TARGET_KERNEL_SOURCE="/usr/src/${KERNEL_VERSION}"
 KERNEL_BUILD_SYMLINK="/lib/modules/${KERNEL_VERSION}/build"
 
+export ARCH=arm64
+export CROSS_COMPILE=aarch64-linux-gnu-
+
 ##############################################################################
 # Helper Functions
 ##############################################################################
@@ -156,7 +159,7 @@ install_custom_packages() {
     # Example:
     # apt install -y your-package-here
     
-    apt install -y pciutils i2c-tools usbutils gpiod libgpiod2 libgpiod-dev
+    apt install -y pciutils i2c-tools usbutils gpiod libgpiod2 libgpiod-dev dkms
     
     # ===== END CUSTOM PACKAGES =====
     
@@ -434,8 +437,8 @@ prepare_kernel_modules() {
     fi
     
     # Clean any previous builds
-    log_info "Cleaning previous build artifacts..."
-    make clean 2>/dev/null || log_warn "Clean failed (may be OK if first run)"
+    #log_info "Creating defconfig"
+    #make defconfig 2>/dev/null || log_warn "Clean failed (may be OK if first run)"
     
     # Rebuild scripts for ARM64
     log_info "Rebuilding kernel scripts for ARM64..."
@@ -443,6 +446,12 @@ prepare_kernel_modules() {
     
 
     if ! make modules_prepare; then
+        log_error "Failed to rebuild modules!"
+        log_error "Check if build tools are installed"
+        exit 1
+    fi
+
+    if ! make scripts; then
         log_error "Failed to rebuild scripts!"
         log_error "Check if build tools are installed"
         exit 1
@@ -548,8 +557,8 @@ install_hailo_pcie_driver() {
     
     # Use noninteractive mode to auto-answer "Yes" to DKMS
     if ! DEBIAN_FRONTEND=noninteractive dpkg -i "${HAILO_PCIE_DEB}"; then
-        log_warn "dpkg reported errors, attempting to fix dependencies..."
-        apt install -f -y
+        #log_warn "dpkg reported errors, attempting to fix dependencies..."
+        #apt install -f -y
     fi
     
     # Check DKMS status

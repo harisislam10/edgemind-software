@@ -33,8 +33,8 @@ git lfs install
 ### Step 3: Clone the Repository
 
 ```bash
-git clone https://github.com/harisislam10/edgemind_installation.git
-cd edgemind_installation
+git clone https://github.com/harisislam10/edgemind-software.git
+cd edgemind-software
 ```
 
 ### Step 4: Download Large Files
