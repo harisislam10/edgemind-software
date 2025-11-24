@@ -310,7 +310,7 @@ setup_kernel_source() {
     # Copy kernel build artifacts
     log_info "Copying kernel build artifacts..."
     log_info "This may take a few moments..."
-    cp -a "${SCRIPT_DIR}/kernel-build/"* "${TARGET_KERNEL_SOURCE}/"
+    cp -a "${SCRIPT_DIR}/kernel-build/." "${TARGET_KERNEL_SOURCE}/"
     
     # Copy kernel source if available
     if [ -d "${SCRIPT_DIR}/kernel-source" ] && [ -n "$(ls -A ${SCRIPT_DIR}/kernel-source 2>/dev/null)" ]; then
