@@ -21,51 +21,36 @@ sudo apt update
 sudo apt install git
 ```
 
-### Step 2: Install Git LFS (Large File Storage)
-
-Git LFS is needed to download large kernel files from the repository.
-
-```bash
-sudo apt install git-lfs
-git lfs install
-```
-
-### Step 3: Clone the Repository
+### Step 2: Clone the Repository
 
 ```bash
 git clone https://github.com/harisislam10/edgemind-software.git
 
 ```
 Downlaod the source files form google drive:
-```bash
-https://drive.google.com/file/d/1wHTMejGnEwljkVKki8c50BYHy81AT3gs/view?usp=drive_link
 
-https://drive.google.com/file/d/1D8bYsGU85H6sZkUg_BZ9qFMk4dRfbxf3/view?usp=drive_link
-
-https://drive.google.com/file/d/1zZ23_-z86Uum1ALYGGQkgg77VA_XLQW-/view?usp=drive_link
-
-```
 ```bash
 cd edgemind-software
 ```
 
-### Step 4: Download Large Files
+### Step 3: Download Large Files
 
 The kernel TAR files are stored with Git LFS. Pull them:
 
 ```bash
-git lfs pull
+chmod +x downloads.sh
+suod  ./downloads.sh
 ```
 
 **Wait for download to complete.** This downloads kernel-build.tar.gz and kernel-source.tar.gz files.
 
-### Step 5: Make Setup Script Executable
+### Step 4: Make Setup Script Executable
 
 ```bash
 chmod +x setup.sh
 ```
 
-### Step 6: Run the Setup
+### Step 5: Run the Setup
 
 ```bash
 sudo ./setup.sh
@@ -79,7 +64,7 @@ sudo ./setup.sh
 
 **⚠️ Important:** Let the script complete fully. Do not interrupt!
 
-### Step 7: Restore Docker Volumes
+### Step 6: Restore Docker Volumes
 
 After setup completes, restore the pre-configured Docker volumes:
 
