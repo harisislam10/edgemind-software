@@ -34,6 +34,13 @@ git lfs install
 
 ```bash
 git clone https://github.com/harisislam10/edgemind-software.git
+
+```
+Downlaod the source files form google drive:
+```bash
+https://drive.google.com/drive/u/1/home
+```
+```bash
 cd edgemind-software
 ```
 
