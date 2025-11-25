@@ -3,6 +3,7 @@
 ##############################################################################
 # Docker Volumes Restore Script
 # Restores Docker volumes from backup for EdgeMind installation
+# Now with automatic rename from hailosbc_* to edgemind-software_*
 ##############################################################################
 
 set -e
@@ -213,7 +214,67 @@ restore_volumes() {
     # Count volumes
     VOLUME_COUNT=$(ls -1 "${DOCKER_VOLUMES_DIR}" 2>/dev/null | wc -l)
     log_info ""
-    log_info "Total volumes restored: ${VOLUME_COUNT}"
+    log_info "Total items extracted: ${VOLUME_COUNT}"
+}
+
+##############################################################################
+# Rename Volumes from hailosbc to edgemind-software
+##############################################################################
+
+rename_volumes() {
+    log_step "STEP 5: Renaming Volumes"
+    
+    cd "${DOCKER_VOLUMES_DIR}"
+    
+    log_info "Checking for volumes to rename..."
+    
+    # Remove any existing edgemind-software volumes first
+    if ls edgemind-software_* 1> /dev/null 2>&1; then
+        log_warn "Found existing edgemind-software_* volumes, removing..."
+        rm -rf edgemind-software_*
+        log_info "✓ Old volumes removed"
+    fi
+    
+    # Rename hailosbc volumes to edgemind-software
+    RENAMED=0
+    
+    if [ -d "hailosbc_uploads" ]; then
+        log_info "Renaming: hailosbc_uploads → edgemind-software_uploads"
+        mv hailosbc_uploads edgemind-software_uploads
+        RENAMED=$((RENAMED + 1))
+    fi
+    
+    if [ -d "hailosbc_models" ]; then
+        log_info "Renaming: hailosbc_models → edgemind-software_models"
+        mv hailosbc_models edgemind-software_models
+        RENAMED=$((RENAMED + 1))
+    fi
+    
+    if [ -d "hailosbc_postgres_data" ]; then
+        log_info "Renaming: hailosbc_postgres_data → edgemind-software_postgres_data"
+        mv hailosbc_postgres_data edgemind-software_postgres_data
+        RENAMED=$((RENAMED + 1))
+    fi
+    
+    if [ $RENAMED -eq 0 ]; then
+        log_warn "No hailosbc_* volumes found to rename"
+        log_warn "Checking if edgemind-software_* volumes already exist..."
+        
+        if ls edgemind-software_* 1> /dev/null 2>&1; then
+            log_info "✓ edgemind-software_* volumes already exist"
+        else
+            log_error "No volumes found! Check extraction step."
+            exit 1
+        fi
+    else
+        log_info "✓ Renamed ${RENAMED} volumes"
+    fi
+    
+    # Show final volume structure
+    log_info ""
+    log_info "Final volume structure:"
+    ls -lh "${DOCKER_VOLUMES_DIR}" | grep -E "edgemind-software|metadata|backing" || \
+    ls -lh "${DOCKER_VOLUMES_DIR}"
 }
 
 ##############################################################################
@@ -221,7 +282,7 @@ restore_volumes() {
 ##############################################################################
 
 fix_permissions() {
-    log_step "STEP 5: Fixing Permissions"
+    log_step "STEP 6: Fixing Permissions"
     
     log_info "Setting correct ownership and permissions..."
     
@@ -240,7 +301,7 @@ fix_permissions() {
 ##############################################################################
 
 restart_docker_services() {
-    log_step "STEP 6: Starting Docker Services"
+    log_step "STEP 7: Starting Docker Services"
     
     # Restart Docker daemon to recognize new volumes
     log_info "Restarting Docker daemon..."
@@ -269,33 +330,39 @@ restart_docker_services() {
 ##############################################################################
 
 verify_restoration() {
-    log_step "STEP 7: Verifying Restoration"
+    log_step "STEP 8: Verifying Restoration"
     
     # List Docker volumes
     log_info "Docker volumes:"
     docker volume ls
     
-    # Check if volumes are accessible
+    # Check specific edgemind-software volumes
     log_info ""
-    log_info "Checking volume accessibility..."
+    log_info "Checking edgemind-software volumes..."
     
-    VOLUMES=$(docker volume ls -q)
-    ACCESSIBLE=0
-    TOTAL=0
+    EXPECTED_VOLUMES=(
+        "edgemind-software_uploads"
+        "edgemind-software_models"
+        "edgemind-software_postgres_data"
+    )
     
-    for vol in $VOLUMES; do
-        TOTAL=$((TOTAL + 1))
+    FOUND=0
+    for vol in "${EXPECTED_VOLUMES[@]}"; do
         if docker volume inspect "$vol" &>/dev/null; then
-            ACCESSIBLE=$((ACCESSIBLE + 1))
+            log_info "✓ $vol"
+            FOUND=$((FOUND + 1))
+        else
+            log_warn "✗ $vol not found"
         fi
     done
     
-    log_info "Accessible volumes: ${ACCESSIBLE}/${TOTAL}"
+    log_info ""
+    log_info "Found ${FOUND}/${#EXPECTED_VOLUMES[@]} expected volumes"
     
-    if [ $ACCESSIBLE -eq $TOTAL ]; then
-        log_info "✓ All volumes are accessible!"
+    if [ $FOUND -eq ${#EXPECTED_VOLUMES[@]} ]; then
+        log_info "✓ All required volumes are accessible!"
     else
-        log_warn "⚠ Some volumes may not be accessible"
+        log_warn "⚠ Some volumes may be missing"
     fi
 }
 
@@ -310,7 +377,7 @@ print_banner() {
 ║                                                                   ║
 ║           Docker Volumes Restore Script                           ║
 ║           Restore EdgeMind Docker volumes from backup             ║
-║                                                                   ║
+║           Prepared by Haris                                       ║
 ╚═══════════════════════════════════════════════════════════════════╝
 EOF
     echo -e "${NC}"
@@ -327,10 +394,15 @@ print_summary() {
     echo "  Backup used: ${VOLUMES_BACKUP}"
     echo "  Docker volumes: $(docker volume ls -q | wc -l)"
     echo ""
+    echo -e "${BLUE}Renamed Volumes:${NC}"
+    echo "  hailosbc_uploads        → edgemind-software_uploads"
+    echo "  hailosbc_models         → edgemind-software_models"
+    echo "  hailosbc_postgres_data  → edgemind-software_postgres_data"
+    echo ""
     echo -e "${BLUE}Next Steps:${NC}"
     echo "  1. Verify services are running: docker compose ps"
     echo "  2. Check logs: docker compose logs"
-    echo "  3. Access web interface: http://localhost"
+    echo "  3. Access web interface (check docker-compose.yml for port)"
     echo ""
     echo -e "${GREEN}═══════════════════════════════════════════════════════════════${NC}"
 }
@@ -349,6 +421,7 @@ main() {
     stop_docker_services
     backup_existing_volumes
     restore_volumes
+    rename_volumes          
     fix_permissions
     restart_docker_services
     verify_restoration
