@@ -1,3 +1,6 @@
 VERSION_INFO.txt
 copy-kernel.sh
 hailo_volumes.tar.gz
+tars/kernel-*.tar.gz 
+tars/kernel-build.tar.gz 
+tars/kernel-source.tar.gz 
