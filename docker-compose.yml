@@ -52,7 +52,8 @@ services:
 
   # Frontend (React + Nginx)
   frontend:
-    image: techndev/edgemind:frontend-latest
+    #image: techndev/edgemind:frontend-latest
+    image: shnabeelanwar/edgemind:frontend-latest
     container_name: edgemind-frontend
     restart: unless-stopped
     depends_on:
@@ -91,8 +92,8 @@ services:
   yolo-api:
     image: shnabeelanwar/hailo-infer:latest
     container_name: edgemind-yolo-api
-    devices: 
-      - /dev/video3:/dev/video3 
+    devices:
+      - /dev/video4:/dev/video3
       - /dev/hailo0:/dev/hailo0
     restart: unless-stopped
     environment:
@@ -120,8 +121,8 @@ networks:
 
 volumes:
   postgres_data:
-    name: edgemind-postgres-data
+    driver: local
   uploads:
-    name: edgemind-uploads
+    driver: local
   models:
-    name: edgemind-models
+    driver: local
