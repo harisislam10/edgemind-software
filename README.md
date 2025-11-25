@@ -38,7 +38,12 @@ git clone https://github.com/harisislam10/edgemind-software.git
 ```
 Downlaod the source files form google drive:
 ```bash
-https://drive.google.com/drive/u/1/home
+https://drive.google.com/file/d/1wHTMejGnEwljkVKki8c50BYHy81AT3gs/view?usp=drive_link
+
+https://drive.google.com/file/d/1D8bYsGU85H6sZkUg_BZ9qFMk4dRfbxf3/view?usp=drive_link
+
+https://drive.google.com/file/d/1zZ23_-z86Uum1ALYGGQkgg77VA_XLQW-/view?usp=drive_link
+
 ```
 ```bash
 cd edgemind-software
