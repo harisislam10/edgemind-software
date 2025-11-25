@@ -67,6 +67,22 @@ sudo ./setup.sh
 
 **⚠️ Important:** Let the script complete fully. Do not interrupt!
 
+### Step 7: Restore Docker Volumes
+
+After setup completes, restore the pre-configured Docker volumes:
+
+```bash
+sudo ./restore-volumes.sh
+```
+
+**This will take 5-10 minutes.** The script will:
+- Stop running services
+- Backup existing volumes (if any)
+- Extract and restore volumes
+- Restart services with restored data
+
+**⚠️ Important:** Run this AFTER setup.sh completes successfully!
+
 ---
 
 ## ✅ Verify Installation
