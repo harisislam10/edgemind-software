@@ -7,11 +7,11 @@ echo "=== Removing old release files ==="
 rm -f hailo_volumes.tar.gz
 
 # Ensure tar/ exists
-mkdir -p tar
+mkdir -p tars
 
 # Remove old files inside tar/
-rm -f tar/kernel-source.tar.gz
-rm -f tar/kernel-build.tar.gz
+rm -f tars/kernel-source.tar.gz
+rm -f tars/kernel-build.tar.gz
 
 echo "=== Downloading latest GitHub releases ==="
 
@@ -22,7 +22,7 @@ URL_KERNEL_SOURCE="https://github.com/harisislam10/edgemind-software/releases/do
 
 # Download files
 wget -O hailo_volumes.tar.gz "$URL_HAILO"
-wget -O tar/kernel-build.tar.gz "$URL_KERNEL_BUILD"
-wget -O tar/kernel-source.tar.gz "$URL_KERNEL_SOURCE"
+wget -O tars/kernel-build.tar.gz "$URL_KERNEL_BUILD"
+wget -O tars/kernel-source.tar.gz "$URL_KERNEL_SOURCE"
 
 echo "=== Downloads completed successfully ==="
