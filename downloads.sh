@@ -25,4 +25,10 @@ wget -O hailo_volumes.tar.gz "$URL_HAILO"
 wget -O tars/kernel-build.tar.gz "$URL_KERNEL_BUILD"
 wget -O tars/kernel-source.tar.gz "$URL_KERNEL_SOURCE"
 
+echo "=== Fixing permissions ==="
+
+chmod 755 hailo_volumes.tar.gz
+chmod 755 tars/kernel-build.tar.gz
+chmod 755 tars/kernel-source.tar.gz
+
 echo "=== Downloads completed successfully ==="
