@@ -52,7 +52,7 @@ services:
 
   # Frontend (React + Nginx)
   frontend:
-    #image: techndev/edgemind:frontend-latest
+    #image: shnabeelanwar/edgemind:frontend-2.1.0
     image: shnabeelanwar/edgemind:frontend-latest
     container_name: edgemind-frontend
     restart: unless-stopped
@@ -90,7 +90,7 @@ services:
 
   # YOLO Inference API
   yolo-api:
-    image: shnabeelanwar/hailo-infer:latest
+    image: shnabeelanwar/hailo-infer:1.2.0
     container_name: edgemind-yolo-api
     devices:
       - /dev/video4:/dev/video3
