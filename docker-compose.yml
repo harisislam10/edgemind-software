@@ -2,6 +2,7 @@ services:
   # PostgreSQL Database
   postgres:
     image: postgres:15-alpine
+    platform: linux/arm64
     container_name: edgemind-postgres
     restart: unless-stopped
     environment:
@@ -23,6 +24,7 @@ services:
   # Backend API
   backend:
     image: techndev/edgemind:backend-latest
+    platform: linux/arm64
     container_name: edgemind-backend
     restart: unless-stopped
     depends_on:
@@ -53,6 +55,7 @@ services:
   # Frontend (React + Nginx)
   frontend:
     image: shnabeelanwar/edgemind:frontend-2.1.0
+    platform: linux/arm64
     container_name: edgemind-frontend
     restart: unless-stopped
     depends_on:
@@ -71,6 +74,7 @@ services:
   # Cloudflare Worker (MinIO & Training)
   worker:
     image: techndev/edgemind:worker-1.0.0
+    platform: linux/arm64
     container_name: edgemind-worker
     restart: unless-stopped
     environment:
@@ -90,6 +94,7 @@ services:
   # YOLO Inference API
   yolo-api:
     image: shnabeelanwar/hailo-infer:1.3.0
+    platform: linux/arm64
     container_name: edgemind-yolo-api
     devices:
       - /dev/video0:/dev/video0
